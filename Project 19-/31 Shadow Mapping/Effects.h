@@ -210,4 +210,81 @@ private:
     class Impl;
     std::unique_ptr<Impl> pImpl;
 };
+
+
+
+class AtmosphereEffect : public IEffect, public IEffectTransform,
+    public IEffectMaterial, public IEffectMeshData
+{
+public:
+    AtmosphereEffect();
+    virtual ~AtmosphereEffect() override;
+
+    AtmosphereEffect(AtmosphereEffect&& moveFrom) noexcept;
+    AtmosphereEffect& operator=(AtmosphereEffect&& moveFrom) noexcept;
+
+    // 获取单例
+    static AtmosphereEffect& Get();
+
+    // 初始化所需资源
+    bool InitAll(ID3D11Device* device);
+
+
+    //
+    // IEffectTransform
+    //
+
+    // 无用
+    void XM_CALLCONV SetWorldMatrix(DirectX::FXMMATRIX W) override;
+
+    void XM_CALLCONV SetViewMatrix(DirectX::FXMMATRIX V) override;
+    void XM_CALLCONV SetProjMatrix(DirectX::FXMMATRIX P) override;
+
+    //
+    // IEffectMaterial
+    //
+
+    void SetMaterial(const Material& material) override;
+
+    //
+    // IEffectMeshData
+    //
+
+    MeshDataInput GetInputData(const MeshData& meshData) override;
+
+    // 
+    // AtmosphereEffect
+    //
+
+    // 默认状态来绘制
+    void SetRenderDefault();
+
+    // other
+    void SetRenderTargetSize(int width, int height);
+    void SetTime(float time);
+    void SetDepthTexture(ID3D11ShaderResourceView* depthTexture);
+    void SetLitTexture(ID3D11ShaderResourceView* litTexture);
+    void SetCameraLookAt(const DirectX::XMFLOAT3& cameraLookAt);
+    void SetLightDir(const DirectX::XMFLOAT3& lightDir);
+    void SetCameraRight(const DirectX::XMFLOAT3& cameraRight);
+
+
+
+    //// 设置深度图
+    //void SetDepthTexture(ID3D11ShaderResourceView* depthTexture);
+    //// 设置场景渲染图
+    //void SetLitTexture(ID3D11ShaderResourceView* litTexture);
+
+    //
+    // IEffect
+    //
+
+    // 应用常量缓冲区和纹理资源的变更
+    void Apply(ID3D11DeviceContext* deviceContext) override;
+
+private:
+    class Impl;
+    std::unique_ptr<Impl> pImpl;
+};
+
 #endif

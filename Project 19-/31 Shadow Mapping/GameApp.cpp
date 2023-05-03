@@ -29,6 +29,9 @@ bool GameApp::Init()
     if (!m_SkyboxEffect.InitAll(m_pd3dDevice.Get()))
         return false;
 
+    if (!m_AtmosphereEffect.InitAll(m_pd3dDevice.Get()))
+        return false;
+
     if (!m_ShadowEffect.InitAll(m_pd3dDevice.Get()))
         return false;
 
@@ -123,6 +126,13 @@ void GameApp::UpdateScene(float dt)
         0.5f, 0.5f, 0.0f, 1.0f);
     // S = V * P * T
     m_BasicEffect.SetShadowTransformMatrix(LightView * XMMatrixOrthographicLH(40.0f, 40.0f, 20.0f, 60.0f) * T);
+
+    // 大气
+    m_AtmosphereEffect.SetRenderTargetSize(m_ClientWidth, m_ClientHeight);
+    m_AtmosphereEffect.SetTime(m_Timer.TotalTime());
+    m_AtmosphereEffect.SetCameraLookAt(m_pCamera->GetLookAxis());
+    m_AtmosphereEffect.SetLightDir(m_DirLights[0].direction);
+    m_AtmosphereEffect.SetCameraRight(m_pCamera->GetRightAxis());
 }
 
 void GameApp::DrawScene()
@@ -139,6 +149,7 @@ void GameApp::DrawScene()
     RenderShadow();
     RenderForward();
     RenderSkybox();
+    RenderAtmosphere();
 
     if (m_EnableDebug)
     {
@@ -226,6 +237,26 @@ void GameApp::RenderSkybox()
     m_SkyboxEffect.SetLitTexture(nullptr);
     m_SkyboxEffect.Apply(m_pd3dImmediateContext.Get());
 }
+void GameApp::RenderAtmosphere()
+{
+    D3D11_VIEWPORT viewport = m_pCamera->GetViewPort();
+    m_pd3dImmediateContext->RSSetViewports(1, &viewport);
+
+    m_AtmosphereEffect.SetRenderDefault();
+    m_AtmosphereEffect.SetDepthTexture(m_pDepthTexture->GetShaderResource());
+    m_AtmosphereEffect.SetLitTexture(m_pLitTexture->GetShaderResource());
+
+    ID3D11RenderTargetView* pRTVs[] = { GetBackBufferRTV() };
+    m_pd3dImmediateContext->OMSetRenderTargets(1, pRTVs, nullptr);
+    m_ScreenSpacePlane.Draw(m_pd3dImmediateContext.Get(), m_AtmosphereEffect);
+
+    // 解除绑定
+    m_pd3dImmediateContext->OMSetRenderTargets(0, nullptr, nullptr);
+    m_AtmosphereEffect.SetDepthTexture(nullptr);
+    m_AtmosphereEffect.SetLitTexture(nullptr);
+    m_AtmosphereEffect.Apply(m_pd3dImmediateContext.Get());
+}
+
 
 bool GameApp::InitResource()
 {
@@ -261,6 +292,13 @@ bool GameApp::InitResource()
     // ******************
     // 初始化对象
     //
+
+    // 后处理
+    {
+        Model* pModel = m_ModelManager.CreateFromGeometry("ScreenSpacePlane", Geometry::CreatePlane(XMFLOAT2(2.0f, 2.0f), XMFLOAT2(1.0f, 1.0f)));
+        pModel->SetDebugObjectName("ScreenSpacePlane");
+        m_ScreenSpacePlane.SetModel(pModel);
+    }
     
     // 地面
     {

@@ -28,6 +28,7 @@ public:
     void RenderShadow();
     void RenderForward();
     void RenderSkybox();
+    void RenderAtmosphere();
 
     template<class Effect>
     void DrawScene(Effect& effect, std::function<void(Effect&, ID3D11DeviceContext*)> func = [](Effect&, ID3D11DeviceContext*) {})
@@ -70,6 +71,7 @@ private:
     GameObject m_Spheres[10];									// 球体
     GameObject m_House;											// 房屋
     GameObject m_Skybox;                                        // 天空盒
+    GameObject m_ScreenSpacePlane;                              // 用来做后处理的覆盖平面
 
     std::unique_ptr<Depth2D> m_pDepthTexture;                   // 深度纹理
     std::unique_ptr<Texture2D> m_pLitTexture;                   // 场景渲染缓冲区
@@ -82,6 +84,7 @@ private:
     BasicEffect m_BasicEffect;				                    // 基础特效
     ShadowEffect m_ShadowEffect;				                // 阴影特效
     SkyboxEffect m_SkyboxEffect;					                // 天空盒特效
+    AtmosphereEffect m_AtmosphereEffect;                        // 大气
     
     std::shared_ptr<FirstPersonCamera> m_pCamera;	            // 摄像机
     FirstPersonCameraController m_CameraController;             // 摄像机控制器
